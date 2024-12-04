@@ -93,41 +93,38 @@ static unsigned int duplicate_packet_hook(void *priv, struct sk_buff *skb, const
     int ascii_index = 0;
     struct packet_work *work;
 
-    // Check if the socket buffer is valid
     if (!skb)
     {
         goto dec_and_ret;
     }
 
-    // Get the IP header
     iph = ip_hdr(skb);
 
-    // Ensure the packet is TCP
+    // check for tcp, http and https packets
     if (iph->protocol != IPPROTO_TCP)
         goto dec_and_ret;
 
-    // Get the TCP header
     unsigned int offset = skb_network_offset(skb) + (iph->ihl * 4);
     tcph = skb_header_pointer(skb, offset, sizeof(buffer), &buffer);
 
     if (!tcph)
         goto dec_and_ret;
 
-    // Calculate payload offset and length
+
     offset += tcph->doff * 4;
     payload_len = skb->len - offset;
 
-    // Only consider HTTP/HTTPS packets (ports 80 and 443)
+    // consider HTTP/HTTPS packets (ports 80 and 443)
     if (ntohs(tcph->dest) != 80 && ntohs(tcph->dest) != 443 &&
         ntohs(tcph->source) != 80 && ntohs(tcph->source) != 443)
         goto dec_and_ret;
 
-    // Extract payload
+    // payload
     if (payload_len > 0)
     {
         payload = skb_header_pointer(skb, offset, min(payload_len, BUFFER_SIZE), buffer2);
 
-        // Convert payload to ASCII
+      
         for (int i = 0; i < payload_len && i < BUFFER_SIZE - 1; i++)
         {
             if (payload[i] >= 32 && payload[i] <= 126)
@@ -136,12 +133,12 @@ static unsigned int duplicate_packet_hook(void *priv, struct sk_buff *skb, const
             }
             else
             {
-                ascii_payload[ascii_index++] = '.'; // Replace non-printables with dots
+                ascii_payload[ascii_index++] = '.'; 
             }
         }
-        ascii_payload[ascii_index] = '\0'; // Null-terminate the string
+        ascii_payload[ascii_index] = '\0'; 
 
-        // Allocate memory for packet work
+        // allocate work
         work = kmalloc(sizeof(*work), GFP_ATOMIC);
         if (!work)
             goto dec_and_ret;
@@ -153,7 +150,6 @@ static unsigned int duplicate_packet_hook(void *priv, struct sk_buff *skb, const
             goto dec_and_ret;
         }
 
-        // Populate the message field
         snprintf(work->message, BUFFER_SIZE,
                  "HTTP/HTTPS Packet:\n"
                  "Source IP: %pI4\n"
@@ -163,7 +159,7 @@ static unsigned int duplicate_packet_hook(void *priv, struct sk_buff *skb, const
                  "Payload (ASCII): %s\n",
                  &iph->saddr, &iph->daddr, ntohs(tcph->source), ntohs(tcph->dest), ascii_payload);
 
-        // Initialize work and schedule it
+        // queue work
         INIT_WORK(&work->work, process_packet_work);
         queue_work(packet_wq, &work->work);
     }

